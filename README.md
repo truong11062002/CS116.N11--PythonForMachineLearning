@@ -27,13 +27,22 @@
 <a name ="quatrinh"></a>
 ### 1. Lập trình Python cho Máy học
 
+#### WEEK 1: Tổng quan môn học
+
+#### WEEK 2: Thực hiện xử lí dữ liệu
+
 
 <a name ="colab"></a>
-### 2. COLAB ASSSIGNMENTS
+### 2. Assignments
 
+#### Excercise 01
+
+Thực hiện các bước xử lí dữ liệu trên dataset Iris
+
+[Excercise 01](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex1)
 
 <a name ="QT"></a>
-### 3. QT IN CLASS
+### 3. Bài tập trên lớp
 
 ## GIẢNG VIÊN HƯỚNG DẪN
 <a name="giangvien"></a>
