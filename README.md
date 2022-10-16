@@ -35,11 +35,22 @@
 <a name ="colab"></a>
 ### 2. Assignments
 
-#### Excercise 01
+### Excercise 01
 
 Thực hiện các bước xử lí dữ liệu trên dataset Iris
 
-[Excercise 01](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex1)
+[Xử lí dữ liệu](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex1)
+
+### Excercise 02
+[Xử lí dữ liệu GIS](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex2/20522087_NguyenNhatTruong)
+
+### Excercise 03
+
+[Trực quan hóa dữ liệu GIS trên bản đồ](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex3)
+
+### Excercise 04
+
+[Gom cụm dữ liệu click của người dùng](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex4)
 
 <a name ="QT"></a>
 ### 3. Bài tập trên lớp
