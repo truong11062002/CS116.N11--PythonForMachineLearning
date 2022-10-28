@@ -129,12 +129,12 @@ if bool_std == 'Yes':
 # test size 
 option = st.selectbox(
 'Chọn cách chia dữ liệu?',
-('Normal', 'K Fold Cross validation'))
+('Train/Test split', 'K Fold Cross validation'))
 
 st.write('You selected:', option)
 
 
-if option == "Normal":
+if option == "Train/Test split":
     
     # Split the dataset
     left_column, right_column = st.columns(2)
@@ -187,6 +187,47 @@ if option == "Normal":
         st.write(f'R2 score: {r2:.2f}')
         st.write(f'Mean Squared Error: {mse:.2f}')
         st.write(f'Mean Absolute Error: {mae:.2f}')
+    
+    """
+    Plot result
+    """
+
+    left_column, right_column = st.columns(2)
+    show_train = left_column.radio(
+                    'Show the training dataset:', 
+                    ('Yes','No')
+                    )
+    show_val = right_column.radio(
+                    'Show the validation dataset:', 
+                    ('Yes','No')
+                    )
+
+    # default axis range
+    y_max_train = max([max(Y_train), max(Y_pred_train)])
+    y_max_val = max([max(Y_test), max(Y_pred_test)])
+    y_max = int(max([y_max_train, y_max_val])) 
+
+    # interactive axis range
+    left_column, right_column = st.columns(2)
+    x_min = left_column.number_input('x_min:',value=0,step=1)
+    x_max = right_column.number_input('x_max:',value=y_max,step=1)
+    left_column, right_column = st.columns(2)
+    y_min = left_column.number_input('y_min:',value=0,step=1)
+    y_max = right_column.number_input('y_max:',value=y_max,step=1)
+
+
+    fig = plt.figure(figsize=(3, 3))
+    if show_train == 'Yes':
+        plt.scatter(Y_train, Y_pred_train,lw=0.1,color="r",label="training data")
+    if show_val == 'Yes':
+        plt.scatter(Y_test, Y_pred_test,lw=0.1,color="b",label="validation data")
+    plt.xlabel("PRICES",fontsize=8)
+    plt.ylabel("PRICES of prediction",fontsize=8)
+    plt.xlim(int(x_min), int(x_max)+5)
+    plt.ylim(int(y_min), int(y_max)+5)
+    plt.legend(fontsize=6)
+    plt.tick_params(labelsize=6)
+    st.pyplot(fig)
 
 
 if option == "K Fold Cross validation":
