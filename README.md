@@ -29,28 +29,26 @@
 
 #### WEEK 1: Tổng quan môn học
 
-#### WEEK 2: Thực hiện xử lí dữ liệu
-
-
 <a name ="colab"></a>
 ### 2. Assignments
 
-### Excercise 01
-
-Thực hiện các bước xử lí dữ liệu trên dataset Iris
+### Excercise 01: Thực hiện các bước xử lí dữ liệu trên dataset Iris
 
 [Xử lí dữ liệu](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex1)
 
-### Excercise 02
+### Excercise 02: Xử lí dữ liệu GIS và làm quen với geopandas
 [Xử lí dữ liệu GIS](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex2/20522087_NguyenNhatTruong)
 
-### Excercise 03
+### Excercise 03: Trực quan hóa dữ liệu GIS trên bản đồ
 
 [Trực quan hóa dữ liệu GIS trên bản đồ](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex3)
 
-### Excercise 04
+### Excercise 04: Gom cụm dữ liệu click của người dùng
 
 [Gom cụm dữ liệu click của người dùng](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex4)
+
+### Excercise 05: Linear Regression với streamlit
+[Linear Regression với streamlit](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/BTTL_LinearRegression)
 
 <a name ="QT"></a>
 ### 3. Bài tập trên lớp
