@@ -117,7 +117,7 @@ bool_std = left_column.radio(
 
 df_std = df_log.copy()
 
-# Bị bug đang trong quá trình chỉnh sửa (Coming soon....)
+# Bị bug và đang trong quá trình chỉnh sửa (Coming soon....)
 # if bool_std == 'Yes':
 # 	Std_Features_chosen = []
 # 	Std_Features_NonUsed = right_column.multiselect(
@@ -287,7 +287,6 @@ if option == "K Fold Cross validation":
 
 
 
-    
 
 
 
