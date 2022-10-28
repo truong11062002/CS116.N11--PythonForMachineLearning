@@ -36,7 +36,7 @@
 
 [Xử lí dữ liệu](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex1)
 
-### Excercise 02
+### Excercise 02: Xử lí dữ liệu GIS và làm quen với geopandas
 [Xử lí dữ liệu GIS](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/Ex2/20522087_NguyenNhatTruong)
 
 ### Excercise 03: Trực quan hóa dữ liệu GIS trên bản đồ
