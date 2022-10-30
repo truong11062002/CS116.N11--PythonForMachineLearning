@@ -17,6 +17,8 @@ from sklearn.metrics import mean_squared_error
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import StandardScaler
 import numpy as np
+from numpy import array
+import altair as alt
 
 st.markdown("""
 # Họ và tên: Nguyễn Nhật Trường
@@ -115,6 +117,7 @@ bool_std = left_column.radio(
 			('No','Yes')
 			)
 
+# Giúp cho dữ liệu tuyến tính hơn và không bị chênh lệch quá cao
 df_std = df_log.copy()
 
 # Bị bug và đang trong quá trình chỉnh sửa (Coming soon....)
@@ -159,19 +162,23 @@ if option == "Train/Test split":
     X = df_std.iloc[:,: -1]
     y = df_std.iloc[:, -1]
 
-    # One hot Encoder
     X_new = X.copy()
+    # One hot encoder
     for i in range(numOfFeature):
         if list_feature[i] == "Position":
+            X_column = X_new['Position'].to_frame()
             X_new = X_new.drop(columns=['Position'])
             ohe = OneHotEncoder(handle_unknown='ignore')
-            ohe_df = pd.DataFrame(ohe.fit_transform(X).astype(int).toarray())
+            ohe_df = pd.DataFrame(ohe.fit_transform(X_column).astype(int).toarray())
             X_new = pd.concat([X_new, ohe_df], axis=1)
+
         if list_feature[i] == "State":
+            X_column = X_new['State'].to_frame()
             X_new = X_new.drop(columns=['State'])
             ohe = OneHotEncoder(handle_unknown='ignore')
-            ohe_df = pd.DataFrame(ohe.fit_transform(X).astype(int).toarray())
+            ohe_df = pd.DataFrame(ohe.fit_transform(X_column).astype(int).toarray())
             X_new = pd.concat([X_new, ohe_df], axis=1)
+    
 
     st.markdown("""
     # Dataframe after One-Hot Encoder
@@ -195,9 +202,10 @@ if option == "Train/Test split":
     r2 = r2_score(Y_test, Y_pred_test)
     mse = mean_squared_error(Y_test, Y_pred_test, squared=False)
     mae = mean_absolute_error(Y_test, Y_pred_test)
-
+    
     # On click run train/test split
-    if st.button("Run"):
+    btn_train_test = st.button("Run with train/test split", key="1")
+    if btn_train_test:
         st.write(f'R2 score: {r2:.2f}')
         st.write(f'Mean Squared Error: {mse:.2f}')
         st.write(f'Mean Absolute Error: {mae:.2f}')
@@ -250,43 +258,85 @@ if option == "K Fold Cross validation":
     random_seed = right_column.number_input('Set random seed (0 -> ):', value =0, step=1, min_value=0)
 
     # Define K-Fold Cross validation
-    k_fold = KFold(n_splits = int(num_folds), shuffle=True, random_state = random_seed)
-
-    X = df_std.iloc[:,: -1]
-    y = df_std.iloc[:, -1]
-
-    X_new = X.copy()
+    kf = KFold(n_splits = int(num_folds), shuffle=True, random_state = random_seed)
     
+    # Split data
+    feature = df_std.iloc[:,: -1] 
+    target = df_std.iloc[:, -1]
+
+    X_new = feature.copy()
+
     # One hot encoder
     for i in range(numOfFeature):
         if list_feature[i] == "Position":
+            X_column = X_new['Position'].to_frame()
             X_new = X_new.drop(columns=['Position'])
             ohe = OneHotEncoder(handle_unknown='ignore')
-            ohe_df = pd.DataFrame(ohe.fit_transform(X).astype(int).toarray())
+            ohe_df = pd.DataFrame(ohe.fit_transform(X_column).astype(int).toarray())
             X_new = pd.concat([X_new, ohe_df], axis=1)
+
         if list_feature[i] == "State":
+            X_column = X_new['State'].to_frame()
             X_new = X_new.drop(columns=['State'])
             ohe = OneHotEncoder(handle_unknown='ignore')
-            ohe_df = pd.DataFrame(ohe.fit_transform(X).astype(int).toarray())
+            ohe_df = pd.DataFrame(ohe.fit_transform(X_column).astype(int).toarray())
             X_new = pd.concat([X_new, ohe_df], axis=1)
 
-    # Using Linear regression model to predict
-    model = LinearRegression()
-    scores = cross_val_score(model, X_new, y, cv=k_fold)
-    btn = st.button("Run")  
+    X = X_new.to_numpy()
+    y = target.to_numpy()
+    btn_kf = st.button("Run with k-fold", key="2")
+    if btn_kf:
+        r2_list = []
+        mse_list = []
+        mae_list = []
 
-    #On click run
-    if btn:
-        st.write("Score by Cross-Validation (K-Fold): ", scores)
-        st.write("Mean: ", scores.mean())
-        st.write("Standard Deviation: ", scores.std())
-        
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            Y_train, Y_test = y[train_index], y[test_index]
 
-    
+            # Model linear regression
+            regressor = LinearRegression()
+            regressor.fit(X_train, Y_train)
 
+            # Validation
+            Y_pred_train = regressor.predict(X_train)
+            Y_pred_test = regressor.predict(X_test)
 
+            # Using the r2 value as a validation indicator
+            r2 = r2_score(Y_test, Y_pred_test)
+            mse = mean_squared_error(Y_test, Y_pred_test, squared=False)
+            mae = mean_absolute_error(Y_test, Y_pred_test)
+            
+            r2_list.append(r2)
+            mse_list.append(mse)
+            mae_list.append(mae)
 
+            
+            # list_fold.append(k)
 
+        df_r2 = pd.DataFrame(r2_list, columns=["Score"])
+        df_mse = pd.DataFrame(mse_list, columns=["Score"])
+        df_mae = pd.DataFrame(mae_list, columns=["Score"])
 
+        df_mae.index = df_mae.index.factorize()[0] + 1
+        df_mse.index = df_mse.index.factorize()[0] + 1
+        df_r2.index = df_r2.index.factorize()[0] + 1
 
+        df_mae.reset_index(inplace=True)
+        df_mae = df_mae.rename(columns = {'index':'Fold'})
+        df_mse.reset_index(inplace=True)
+        df_mse = df_mse.rename(columns = {'index':'Fold'})
+        df_r2.reset_index(inplace=True)
+        df_r2 = df_r2.rename(columns = {'index':'Fold'})
 
+        r2, mse, mae = st.tabs(["R2", "MSE", "MAE"])
+
+        with r2:
+            c = alt.Chart(df_r2).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
+        with mse:
+            c = alt.Chart(df_mse).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
+        with mae:
+            c = alt.Chart(df_mae).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
