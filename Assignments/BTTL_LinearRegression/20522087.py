@@ -37,7 +37,7 @@ if uploaded_file is not None:
     
     
 # Load data and show dataset
-df = pd.read_csv('dataset/' + uploaded_file.name)
+df = pd.read_csv(uploaded_file)
 
 # Show the table data
 if st.checkbox('Show the dataset as table data'):
