@@ -32,8 +32,8 @@ if uploaded_file is None:
 if uploaded_file is not None:
     # To read file as bytes to local disk:
     bytes_data = uploaded_file.getvalue()
-    with open('dataset/' + uploaded_file.name, 'wb') as f:
-        f.write(bytes_data)
+    # with open('dataset/' + uploaded_file.name, 'wb') as f:
+    #     f.write(bytes_data)
     
     
 # Load data and show dataset
