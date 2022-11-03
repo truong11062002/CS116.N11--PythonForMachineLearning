@@ -50,7 +50,10 @@
 ### Excercise 05: Linear Regression với streamlit
 [Linear Regression với streamlit](https://github.com/truong11062002/CS116.N11/tree/main/Assignments/BTTL_LinearRegression)
 
+[Deploy streamlit app](https://truong11062002-assignmentsbttl-linearregression20522087-2o6w4k.streamlitapp.com/)
+
 <a name ="QT"></a>
+ 
 ### 3. Bài tập trên lớp
 
 ## GIẢNG VIÊN HƯỚNG DẪN
