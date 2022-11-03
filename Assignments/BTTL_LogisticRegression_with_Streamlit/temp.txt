@@ -1,0 +1,250 @@
+
+# Show the table data
+if st.checkbox('Show the dataset as table data'):
+	st.dataframe(df)
+
+
+col1, col2 = st.columns(2)
+
+st.markdown("""
+    # Show name features
+    """)
+# Get features name
+for col in df.columns:
+    st.write(col)
+with col1: 
+    # Show data train
+    st.markdown("""
+    # Data train
+    """)
+    X_train = df.iloc[:, 0:-1]
+    st.write(X_train)
+with col2:    
+    st.markdown("""
+    # Data test
+    """)
+    # target column
+    target_column = df.iloc[:, -1]
+    st.write(target_column)
+
+# list data
+list_feature = df.columns
+numOfFeature = len(list_feature)
+
+# Plot some feature
+if st.checkbox('Show the relation between "Target" vs each variable'):
+	checked_variable = st.selectbox('Select one variable:', list_feature)
+
+    # Plot
+	fig, ax = plt.subplots(figsize=(5, 3))
+	ax.scatter(x=df[checked_variable], y=target_column)
+	plt.xlabel(checked_variable)
+	plt.ylabel("y_target")
+	st.pyplot(fig)
+
+# Select the variables to be used
+Features_Used = st.multiselect(
+	'Select the variables to be used', 
+	list_feature, default=['Age', 'EstimatedSalary'])
+st.write("Features to be used", Features_Used)
+
+# Dataframe feature to be used
+df = df.loc[:, Features_Used]
+st.markdown("""
+    # Feature of table to be used
+    """)
+st.dataframe(df)
+
+# Giúp cho dữ liệu tuyến tính hơn và không bị chênh lệch quá cao
+left_column, right_column = st.columns(2)
+bool_log = left_column.radio(
+			'Perform the logarithmic transformation?', 
+			('No','Yes')
+			)
+
+df_log, Log_Features = df.copy(), []
+if bool_log == 'Yes':
+	Log_Features = right_column.multiselect(
+					'Select the variables you perform the logarithmic transformation', 
+					df.columns
+					)
+	# Perform logarithmic transformation
+	df_log[Log_Features] = np.log(df_log[Log_Features])
+
+left_column, right_column = st.columns(2)
+bool_std = left_column.radio(
+			'Perform the standardization?', 
+			('No','Yes')
+			)
+
+df_std = df_log.copy()
+
+# Select split data way
+option = st.selectbox(
+'Chọn cách chia dữ liệu?',
+('Train/Test split', 'K Fold Cross validation'))
+st.write('You selected:', option)
+
+
+if option == "Train/Test split":
+    
+    # Split the dataset
+    left_column, right_column = st.columns(2)
+    test_size = left_column.number_input('Validation dataset size (rate: 0.0 -> 1.0)', min_value = 0.0,
+    max_value=1.0,
+    value = 0.2,
+    step = 0.1,
+    )
+
+    # random seed
+    random_seed = right_column.number_input('Set random seed (0 -> ):', value =0, step=1, min_value=0)
+
+    # Set train and test
+    X = df_std.iloc[:,: -1]
+    y = df_std.iloc[:, -1]
+
+    X_new = X.copy()
+
+    # split the dataset
+    X_train, X_test, Y_train, Y_test = train_test_split(X_new , y, test_size = test_size, random_state=random_seed)
+
+
+    # Model logistic regression
+    logisticRegr = LogisticRegression()
+    logisticRegr.fit(X_train, Y_train)
+
+    # Predict
+    Y_pred_train = logisticRegr.predict(X_train)
+    Y_pred_test = logisticRegr.predict(X_test)
+
+    precision = precision_score(Y_test, Y_pred_test, average='macro')
+    st.write("Precistion: ", precision)
+    recall = recall_score(Y_test, Y_pred_test, average='macro')
+    st.write("Recall: ",recall)
+    f1 = f1_score(Y_test, Y_pred_test, average='macro')
+    st.write("f1 score: ", f1)
+
+    # lloss = log_loss(Y_test, Y_pred_test)
+    # st.write("Log loss", lloss)
+    
+    # On click run train/test split
+    btn_train_test = st.button("Run with train/test split", key="1")
+    if btn_train_test:
+        st.write(precision)
+        #st.write(f'Recall score: {recall:.2f}')
+        #st.write(f'Log loss score: {lloss:.2f}')
+
+        st.title("Plot the result")
+        left_column, right_column = st.columns(2)
+        show_train = left_column.radio(
+                        'Show the training dataset:', 
+                        ('Yes','No')
+                        )
+        show_val = right_column.radio(
+                        'Show the test dataset:', 
+                        ('Yes','No')
+                        )
+
+        # default axis range
+        y_max_train = max([max(Y_train), max(Y_pred_train)])
+        y_max_val = max([max(Y_test), max(Y_pred_test)])
+        y_max = int(max([y_max_train, y_max_val])) 
+
+        # interactive axis range
+        left_column, right_column = st.columns(2)
+        x_min = left_column.number_input('x_min:',value=0,step=1)
+        x_max = right_column.number_input('x_max:',value=y_max,step=1)
+        left_column, right_column = st.columns(2)
+        y_min = left_column.number_input('y_min:',value=0,step=1)
+        y_max = right_column.number_input('y_max:',value=y_max,step=1)
+
+
+        fig = plt.figure(figsize=(3, 3))
+        if show_train == 'Yes':
+            plt.scatter(Y_train, Y_pred_train,lw=0.1,color="r",label="training data")
+        if show_val == 'Yes':
+            plt.scatter(Y_test, Y_pred_test,lw=0.1,color="b",label="test data")
+        plt.xlabel("y_target",fontsize=8)
+        plt.ylabel("y_target of prediction",fontsize=8)
+        plt.xlim(int(x_min), int(x_max)+5)
+        plt.ylim(int(y_min), int(y_max)+5)
+        plt.legend(fontsize=6)
+        plt.tick_params(labelsize=6)
+        st.pyplot(fig)
+    
+    
+if option == "K Fold Cross validation":
+    left_column, right_column = st.columns(2)
+
+    # Num of folds
+    num_folds = left_column.number_input("Nhập K: ", step=1, min_value = 2)
+
+    # random seed
+    random_seed = right_column.number_input('Set random seed (0 -> ):', value =0, step=1, min_value=0)
+
+    # Define K-Fold Cross validation
+    kf = KFold(n_splits = int(num_folds), shuffle=True, random_state = random_seed)
+    
+    # Split data
+    feature = df_std.iloc[:,: -1] 
+    target = df_std.iloc[:, -1]
+
+    X_new = feature.copy()
+
+    X = X_new.to_numpy()
+    y = target.to_numpy()
+    btn_kf = st.button("Run with k-fold", key="2")
+    if btn_kf:
+        precision_list = []
+        recall_list = []
+        f1_list = []
+
+        for train_index, test_index in kf.split(X):
+            X_train, X_test = X[train_index], X[test_index]
+            Y_train, Y_test = y[train_index], y[test_index]
+
+            # Model logistic regression
+            logisticRegr = LogisticRegression()
+            logisticRegr.fit(X_train, Y_train)
+
+            Y_pred_train = logisticRegr.predict(X_train)
+            Y_pred_test = logisticRegr.predict(X_test)
+
+            # Using the r2 value as a validation indicator
+            precision = precision_score(Y_test, Y_pred_test, average='macro')
+            st.write("Precistion: ", precision)
+            recall = recall_score(Y_test, Y_pred_test, average='macro')
+            st.write("Recall: ",recall)
+            f1 = f1_score(Y_test, Y_pred_test, average='macro')
+            st.write("f1 score: ", f1)
+            
+            precision_list.append(precision)
+            recall_list.append(recall)
+            f1_list.append(f1)
+
+        df_precision = pd.DataFrame(precision_list, columns=["Score"])
+        df_recall = pd.DataFrame(recall_list, columns=["Score"])
+        df_f1 = pd.DataFrame(f1_list, columns=["Score"])
+
+        df_f1.index = df_f1.index.factorize()[0] + 1
+        df_recall.index = df_recall.index.factorize()[0] + 1
+        df_precision.index = df_precision.index.factorize()[0] + 1
+
+        df_f1.reset_index(inplace=True)
+        df_mae = df_f1.rename(columns = {'index':'Fold'})
+        df_recall.reset_index(inplace=True)
+        df_mse = df_recall.rename(columns = {'index':'Fold'})
+        df_precision.reset_index(inplace=True)
+        df_precision = df_precision.rename(columns = {'index':'Fold'})
+
+        precision, recall, f1 = st.tabs(["Precision", "Recall", "F1 Score"])
+
+        with precision:
+            c = alt.Chart(df_precision).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
+        with recall:
+            c = alt.Chart(df_recall).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
+        with f1:
+            c = alt.Chart(df_f1).mark_bar(size=30).encode(alt.X('Fold', axis=alt.Axis(title='Fold', tickMinStep=1)), y='Score')
+            st.altair_chart(c, use_container_width=False)
