@@ -17,6 +17,7 @@ from sklearn import metrics
 from sklearn.metrics import plot_confusion_matrix, plot_roc_curve, plot_precision_recall_curve
 from sklearn.datasets import load_wine
 from sklearn.decomposition import PCA
+import plotly.graph_objects as go
 
 import numpy as np
 from numpy import array
@@ -28,7 +29,8 @@ st.markdown("""
 """)
 
 
-st.title("Logistic Regression with Streamlit")
+st.title('PCA applied to Wine dataset')
+
 def load_file():
     file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
     if file is not None:
@@ -41,31 +43,40 @@ def load_file():
         st.text("Please upload a csv file")
 
 
-data = load_file()
-st.dataframe(data)
-list_feature = data.columns
-list_name = []
+dataset = load_wine()
 
-for i in range(len(data.columns)):
+df = pd.DataFrame(dataset.data)
+df.columns = dataset.feature_names
+df["target"] = dataset.target
+
+st.dataframe(df)
+
+
+list_feature = df.columns
+# ---------------------------
+list_name = []
+for i in range(len(df.columns)):
     list_name.append(list_feature[i])
 
-data_backup = data.copy()
-features_used = st.multiselect('Please choose the features including target variable that go into the model', data.columns, default=list_name)
-# Dataframe feature to be used
-data = data.loc[:, features_used]
+data_backup = df.copy()
+
 
 st.markdown("""
     # Feature of table to be used
     """)
-st.dataframe(data)
+st.dataframe(df.iloc[:, :-1])
 
 type = st.sidebar.selectbox('Please choose a dimensionality reduction', ('PCA', 'LDA'))
 
 if type == 'PCA':
-    k_components = st.sidebar.number_input('K components', min_value = 0,
-    value = 1,
+    num_pca = st.sidebar.number_input('The minimum value is an integer of 3 or more.', min_value = 3,
+    max_value=13,
+    value = 3,
     step = 1,
     )
+
+if type == 'LDA':
+    st.write("Coming soon")
 
 type = st.sidebar.selectbox('Algorithm type', ('Classification', 'Regression'))
 if type == 'Regression':
@@ -83,15 +94,62 @@ option = st.sidebar.selectbox(
 st.write('You selected:', option)
 
 if option == "Train/Test split":
-    # Prepare data
-    target_options = data_backup.columns # Target option
-    chosen_target = st.sidebar.selectbox("Please choose target column", (target_options))
 
     # Train/test
-    X = data.loc[:, data.columns != chosen_target]
-    y = data[chosen_target]
+    X = df.iloc[:, :-1]
+    y = df['target']
 
+    # Standardization
+    scaler = StandardScaler()
+    x_std = scaler.fit_transform(X)
+
+
+    # -------------- PCA 
+    pca = PCA(n_components=num_pca)
+    x_pca = pca.fit_transform(x_std)
+
+    st.markdown("""
+    # Dataframe after applied PCA
+    """)
+    st.dataframe(x_pca)
+    st.sidebar.markdown(
+    r"""
+    ### Select the principal components to plot
+    ex. Choose '1' for PCA 1
+    """
+    )
+    # Index of PCA, e.g. 1 for PCA 1, 2 for PCA 2, etc..
+    idx_x_pca = st.sidebar.selectbox("x axis is the principal component of ", np.arange(1, num_pca+1), 0)
+    idx_y_pca = st.sidebar.selectbox("y axis is the principal component of ", np.arange(1, num_pca+1), 1)
+    idx_z_pca = st.sidebar.selectbox("z axis is the principal component of ", np.arange(1, num_pca+1), 2)
+
+    # Axis label
+    x_lbl, y_lbl, z_lbl = f"PCA {idx_x_pca}", f"PCA {idx_y_pca}", f"PCA {idx_z_pca}"
+    # data to plot
+    x_plot, y_plot, z_plot = x_pca[:,idx_x_pca-1], x_pca[:,idx_y_pca-1], x_pca[:,idx_z_pca-1]
     # Split the dataset
+
+    trace1 = go.Scatter3d(
+    x=x_plot, y=y_plot, z=z_plot,
+    mode='markers',
+    marker=dict(
+        size=5,
+        color=y,
+        )
+    )   
+
+    # Create an object for graph layout
+    fig = go.Figure(data=[trace1])
+    fig.update_layout(scene = dict(
+                        xaxis_title = x_lbl,
+                        yaxis_title = y_lbl,
+                        zaxis_title = z_lbl),
+                        width=700,
+                        margin=dict(r=20, b=10, l=10, t=10),
+                        )
+    # ----------------------------------------
+    st.plotly_chart(fig, use_container_width=True)
+    # ----------------------------------------
     test_size = st.sidebar.number_input('Validation dataset size (rate: 0.0 -> 1.0)', min_value = 0.0,
     max_value=1.0,
     value = 0.2,
@@ -100,8 +158,7 @@ if option == "Train/Test split":
 
     # random seed
     random_seed = st.sidebar.number_input('Set random seed (0 -> ):', value =0, step=1, min_value=0)
-
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_seed)
+    X_train, X_test, y_train, y_test = train_test_split(x_pca, y, test_size=test_size, random_state=random_seed)
 
     predict_btn = st.sidebar.button('Predict', key=1)
     
@@ -123,7 +180,10 @@ if option == "Train/Test split":
         st.write("Recall: ",recall)
         f1 = f1_score(y_test, Y_pred_test, average='macro')
         st.write("f1 score: ", f1)
-        ll = log_loss(y_test, Y_pred_test)
+
+        prediction_prob = logisticRegr.predict_proba(X_test)
+
+        ll = log_loss(y_test, prediction_prob)
         st.write("Log loss", ll)
 
         # Visualize result after evaluate
@@ -135,13 +195,63 @@ if option == "Train/Test split":
 
 if option == "K Fold Cross validation":
 
-    # Prepare data
-    target_options = data.columns # Target option
-    chosen_target = st.sidebar.selectbox("Please choose target column", (target_options))
-
+    
     # Train/test
-    X = data.loc[:, data.columns != chosen_target]
-    y = data[chosen_target]
+    X = df.iloc[:, :-1]
+    y = df['target']
+
+    # Standardization
+    scaler = StandardScaler()
+    x_std = scaler.fit_transform(X)
+
+
+    # -------------- PCA 
+    pca = PCA(n_components=num_pca)
+    x_pca = pca.fit_transform(x_std)
+    
+
+    st.markdown("""
+    # After applied PCA
+    """)
+    st.dataframe(x_pca)
+    st.sidebar.markdown(
+    r"""
+    ### Select the principal components to plot
+    ex. Choose '1' for PCA 1
+    """
+    )
+    # Index of PCA, e.g. 1 for PCA 1, 2 for PCA 2, etc..
+    idx_x_pca = st.sidebar.selectbox("x axis is the principal component of ", np.arange(1, num_pca+1), 0)
+    idx_y_pca = st.sidebar.selectbox("y axis is the principal component of ", np.arange(1, num_pca+1), 1)
+    idx_z_pca = st.sidebar.selectbox("z axis is the principal component of ", np.arange(1, num_pca+1), 2)
+
+    # Axis label
+    x_lbl, y_lbl, z_lbl = f"PCA {idx_x_pca}", f"PCA {idx_y_pca}", f"PCA {idx_z_pca}"
+    # data to plot
+    x_plot, y_plot, z_plot = x_pca[:,idx_x_pca-1], x_pca[:,idx_y_pca-1], x_pca[:,idx_z_pca-1]
+    # Split the dataset
+
+    trace1 = go.Scatter3d(
+    x=x_plot, y=y_plot, z=z_plot,
+    mode='markers',
+    marker=dict(
+        size=5,
+        color=y,
+        )
+    )   
+
+    # Create an object for graph layout
+    fig = go.Figure(data=[trace1])
+    fig.update_layout(scene = dict(
+                        xaxis_title = x_lbl,
+                        yaxis_title = y_lbl,
+                        zaxis_title = z_lbl),
+                        width=700,
+                        margin=dict(r=20, b=10, l=10, t=10),
+                        )
+    # ----------------------------------------
+    st.plotly_chart(fig, use_container_width=True)
+    # ----------------------------------------
 
     X = X.to_numpy()
     y = y.to_numpy()
@@ -159,7 +269,7 @@ if option == "K Fold Cross validation":
     f1 = []
     ll = []
     for train_index, test_index in kf.split(X):
-        X_train, X_test = X[train_index], X[test_index]
+        X_train, X_test = x_pca[train_index], x_pca[test_index]
         Y_train, Y_test = y[train_index], y[test_index]
 
         # Model logistic regression
@@ -173,7 +283,8 @@ if option == "K Fold Cross validation":
         precision.append(precision_score(Y_test, Y_pred_test, average='macro'))
         recall.append(recall_score(Y_test, Y_pred_test, average='macro'))
         f1.append(f1_score(Y_test, Y_pred_test, average='macro'))
-        ll.append(log_loss(Y_test, Y_pred_test))
+        prediction_prob = logisticRegr.predict_proba(X_test)
+        ll.append(log_loss(Y_test, prediction_prob))
 
     st.write("Mean precision: ", np.mean(precision))
     st.write("Mean recall: ", np.mean(recall))
