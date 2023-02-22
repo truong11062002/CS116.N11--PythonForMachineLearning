@@ -70,8 +70,7 @@
 | 4      | 20520309      | Lại Chí Thiện          |https://github.com/laichithien                        |20520309@gm.uit.edu.vn   |
 ## ĐỒ ÁN MÔN HỌC
 <a name="doan"></a>
-1. Tên đồ án: Updating
-## DEMO ĐỒ ÁN
+TÊN ĐỒ ÁN: ĐÁNH GIÁ CÁC MÔ HÌNH MÁY HỌC TRÊN BÀI TOÁN PHÂN LOẠI BỆNH NHÂN TIỂU ĐƯỜNG
 
 
 
